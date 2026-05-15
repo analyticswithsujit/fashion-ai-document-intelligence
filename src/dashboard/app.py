@@ -1,11 +1,5 @@
 import streamlit as st
 import fitz
-import pytesseract
-import os
-
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-from PIL import Image
-import io
 import faiss
 import numpy as np
 import tempfile
@@ -22,9 +16,6 @@ load_dotenv()
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
-
-# Tesseract path
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\AmitkumarSingh\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
 
 # Load embedding model
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -60,26 +51,15 @@ if uploaded_file is not None:
     # Open PDF
     doc = fitz.open(pdf_path)
 
-    # OCR extraction
+    # Direct text extraction
     full_text = ""
 
-    with st.spinner("Performing OCR Extraction..."):
+    with st.spinner("Extracting Text From PDF..."):
 
-        for page_num in range(len(doc)):
+        for page in doc:
+            full_text += page.get_text()
 
-            page = doc.load_page(page_num)
-
-            pix = page.get_pixmap()
-
-            img_bytes = pix.tobytes("png")
-
-            image = Image.open(io.BytesIO(img_bytes))
-
-            text = pytesseract.image_to_string(image)
-
-            full_text += text
-
-    st.success("OCR Extraction Completed")
+    st.success("Text Extraction Completed")
 
     # Create chunks
     chunks = full_text.split("\n")
